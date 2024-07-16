@@ -89,6 +89,7 @@ try {
         $match->score2 = $score2;
     }
 
+    $updated_json_data = json_encode($matches, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     // Step 5: Save updated matches to matches.json
     if ($updated_json_data) {
         // Step 6: Upload updated matches.json to Cloudinary

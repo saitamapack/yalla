@@ -99,7 +99,8 @@ try {
     // Step 7: Upload updated matches.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
-    $signature = sha1("invalidate=true&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
+    $public_id = 'matches.json'; // Specify the public_id for the file name
+    $signature = sha1("invalidate=true&public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();
     curl_setopt_array($curl, array(
@@ -112,7 +113,8 @@ try {
             'timestamp' => $timestamp,
             'api_key' => $cloudinary_api_key,
             'signature' => $signature,
-            'invalidate' => 'true'
+            'invalidate' => 'true',
+            'public_id' => $public_id // Include public_id in the POST fields
         ),
     ));
     $response = curl_exec($curl);

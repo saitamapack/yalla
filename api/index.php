@@ -30,9 +30,7 @@ try {
     $upload_preset = "yeufjqiy";
 
     // Step 1: Load JSON from Cloudinary
-    $matchesFile = 'matches.json'; // This won't be used if we're not saving locally
-
-    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$matchesFile;
+    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/matches.json';
     $json_data = get_data($json_url);
 
     if (!$json_data) {
@@ -94,16 +92,9 @@ try {
         $match->score2 = $score2;
     }
 
-    // Step 6: Save updated matches to vrc.json locally
-    $local_filename = 'vrc.json';
-    $json_encoded = json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    if (file_put_contents($local_filename, $json_encoded) === false) {
-        die("Failed to save JSON data locally.");
-    }
-
-    // Step 7: Upload vrc.json to Cloudinary
+    // Step 6: Upload updated matches to Cloudinary as vrc.json
     $timestamp = time();
-    $signature = sha1("file=vrc.json&invalidate=true&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
+    $signature = sha1("public_id=vrc.json&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();
     curl_setopt_array($curl, array(
@@ -111,13 +102,13 @@ try {
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => array(
-            'file' => new CURLFile($local_filename), // Upload the local vrc.json file
+            'file' => json_encode(array_values($filtered_matches)), // Upload the updated JSON directly
             'upload_preset' => $upload_preset,
             'timestamp' => $timestamp,
             'api_key' => $cloudinary_api_key,
             'signature' => $signature,
-            'invalidate' => 'true',
-            'public_id' => 'vrc.json' // Specify the public_id as 'vrc.json'
+            'public_id' => 'vrc.json', // Specify the public_id as 'vrc.json'
+            'invalidate' => 'true'
         ),
     ));
 

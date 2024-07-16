@@ -17,11 +17,15 @@ function get_data($url) {
 }
 
 try {
-    // Cloudinary credentials (should be stored securely as environment variables in Vercel)
+    // Fetch Cloudinary credentials and upload preset from environment variables
     $cloudinary_cloud_name = getenv('CLOUDINARY_CLOUD_NAME');
     $cloudinary_api_key = getenv('CLOUDINARY_API_KEY');
     $cloudinary_api_secret = getenv('CLOUDINARY_API_SECRET');
-    $upload_preset = "yeufjqiy"; // This can be set as per your Cloudinary setup
+    $upload_preset = getenv('UPLOAD_PRESET');
+
+    if (!$cloudinary_cloud_name || !$cloudinary_api_key || !$cloudinary_api_secret || !$upload_preset) {
+        throw new Exception("Cloudinary credentials or upload preset not set in environment variables.");
+    }
 
     // URL of the JSON file on Cloudinary
     $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/matches.json';
@@ -30,29 +34,69 @@ try {
     $json_data = get_data($json_url);
 
     if (!$json_data) {
-        die("Failed to fetch JSON data from Cloudinary.");
+        throw new Exception("Failed to fetch JSON data from Cloudinary.");
     }
 
     // Decode JSON data into an array of objects
     $matches = json_decode($json_data);
 
     if (!$matches) {
-        die("Failed to decode JSON data from Cloudinary.");
+        throw new Exception("Failed to decode JSON data from Cloudinary.");
     }
 
-    // Example: Update scores in the $matches array
-    foreach ($matches as &$match) {
-        // Example: Fetch HTML content and update scores
-        // This part should handle updating scores as per your original logic
-        // Replace this with your actual logic to update scores
-        $match->score1 = 1; // Example score update
-        $match->score2 = 2; // Example score update
+    // Step 3: Remove matches older than yesterday
+    $yesterday = strtotime('-1 day');
+    $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
+        $match_date = strtotime($match->match_date);
+        return $match_date > $yesterday;
+    });
+
+    // Step 4: Process each remaining match
+    foreach ($filtered_matches as &$match) {
+        $match_url = $match->match_url;
+
+        // Step 5: Fetch HTML for each match_url
+        $html = get_data($match_url);
+
+        if (!$html) {
+            echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
+            continue;
+        }
+
+        // Use DOMDocument to parse HTML
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true); // Disable libxml errors
+        $dom->loadHTML($html);
+
+        // Find the specific <div class="main-result">
+        $xpath = new DOMXPath($dom);
+        $divClass = 'main-result';
+        $mainResultDiv = $xpath->query("//div[contains(@class, '$divClass')]")->item(0);
+
+        // Initialize scores
+        $score1 = 0;
+        $score2 = 0;
+
+        if ($mainResultDiv) {
+            // Extract scores from <div class="main-result">
+            $bElements = $xpath->query(".//b", $mainResultDiv);
+
+            if ($bElements->length >= 2) {
+                $score1 = (int) $bElements->item(0)->nodeValue;
+                $score2 = (int) $bElements->item(1)->nodeValue;
+            }
+        }
+
+        // Update scores in the match object
+        $match->score1 = $score1;
+        $match->score2 = $score2;
     }
 
-    // Encode updated $matches array back to JSON
-    $updated_json_data = json_encode($matches, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    // Step 5: Save updated matches to a temporary file
+    $temp_file = tempnam(sys_get_temp_dir(), 'matches.json');
+    file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-    // Example: Upload updated JSON data to Cloudinary
+    // Step 6: Upload updated matches.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
     $signature = sha1("invalidate=true&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
@@ -63,7 +107,7 @@ try {
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => array(
-            'file' => $updated_json_data, // Directly pass JSON data
+            'file' => new CURLFile($temp_file),
             'upload_preset' => $upload_preset,
             'timestamp' => $timestamp,
             'api_key' => $cloudinary_api_key,
@@ -80,6 +124,10 @@ try {
     } else {
         echo "Failed to upload matches to Cloudinary.";
     }
+
+    // Clean up: Delete the temporary file
+    unlink($temp_file);
+
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
 }

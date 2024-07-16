@@ -120,7 +120,7 @@ try {
     if ($httpcode === 200) {
         echo "Data uploaded to Cloudinary successfully!";
         // Output JSON response for verification or further processing
-        header('Content-Type: application/json');
+        
         echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     } else {
         echo "Failed to upload data to Cloudinary. HTTP Error: " . $httpcode;

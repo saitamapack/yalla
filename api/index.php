@@ -24,10 +24,10 @@ function get_data($url) {
 
 try {
     // Cloudinary credentials
-    $cloudinary_cloud_name = "ds8s4fn5p";
-    $cloudinary_api_key = "731143319737329";
-    $cloudinary_api_secret = "HD479cTPf2KY6iI7LEuJzrvNTpM";
-    $upload_preset = "yeufjqiy";
+    $cloudinary_cloud_name = "your_cloudinary_cloud_name";
+    $cloudinary_api_key = "your_cloudinary_api_key";
+    $cloudinary_api_secret = "your_cloudinary_api_secret";
+    $upload_preset = "your_cloudinary_upload_preset";
 
     // Step 1: Load JSON from Cloudinary
     $matchesFile = 'matches.json'; // This won't be used if we're not saving locally
@@ -106,7 +106,8 @@ try {
         CURLOPT_POSTFIELDS => json_encode(array_values($filtered_matches)),
         CURLOPT_HTTPHEADER => array(
             'Content-Type: application/json',
-            'X-Requested-With: XMLHttpRequest'
+            'X-Requested-With: XMLHttpRequest',
+            'Authorization: Basic ' . base64_encode("{$cloudinary_api_key}:{$cloudinary_api_secret}")
         ),
     ));
 
@@ -119,7 +120,7 @@ try {
     if ($httpcode === 200) {
         echo "Data uploaded to Cloudinary successfully!";
         // Output JSON response for verification or further processing
-        
+        header('Content-Type: application/json');
         echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     } else {
         echo "Failed to upload data to Cloudinary. HTTP Error: " . $httpcode;

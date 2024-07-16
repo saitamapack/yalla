@@ -92,6 +92,12 @@ try {
         // Update scores in the match data
         $match->score1 = $score1;
         $match->score2 = $score2;
+
+        // Debugging: Output scores for each match
+        echo "Match URL: {$match_url}<br>";
+        echo "Score 1: {$score1}<br>";
+        echo "Score 2: {$score2}<br>";
+        echo "<hr>";
     }
 
     // Step 6: Prepare data for Cloudinary upload

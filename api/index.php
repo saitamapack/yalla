@@ -13,7 +13,7 @@ $json_data = '{
 }';
 
 // Create a temporary file to store JSON data
-$temp_file = tempnam(sys_get_temp_dir(), 'ff.json');
+$temp_file = tempnam(sys_get_temp_dir(), 'ff');
 file_put_contents($temp_file, $json_data);
 
 // Cloudinary upload API endpoint

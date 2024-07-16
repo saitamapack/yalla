@@ -90,7 +90,7 @@ try {
     }
 
     // Step 5: Save updated matches to matches.json
-    if (file_put_contents($matchesFile, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+    if ($updated_json_data) {
         // Step 6: Upload updated matches.json to Cloudinary
         $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
         $timestamp = time();
@@ -102,7 +102,7 @@ try {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => array(
-                'file' => new CURLFile($matchesFile),
+                'file' => $updated_json_data,
                 'upload_preset' => $upload_preset,
                 'timestamp' => $timestamp,
                 'api_key' => $cloudinary_api_key,

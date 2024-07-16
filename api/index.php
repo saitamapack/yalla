@@ -20,11 +20,11 @@ function get_data($url) {
 }
 
 try {
-    // Cloudinary credentials
-    $cloudinary_cloud_name = "ds8s4fn5p";
-    $cloudinary_api_key = "731143319737329";
-    $cloudinary_api_secret = "HD479cTPf2KY6iI7LEuJzrvNTpM";
-    $upload_preset = "yeufjqiy";
+    // Cloudinary credentials (replace with environment variables)
+    $cloudinary_cloud_name = getenv('CLOUDINARY_CLOUD_NAME');
+    $cloudinary_api_key = getenv('CLOUDINARY_API_KEY');
+    $cloudinary_api_secret = getenv('CLOUDINARY_API_SECRET');
+    $upload_preset = "yeufjqiy"; // Replace with your Cloudinary upload preset
 
     // Step 1: Load JSON from Cloudinary
     $matchesFile = 'matches.json'; // This won't be used if we're not saving locally
@@ -91,34 +91,10 @@ try {
         $match->score2 = $score2;
     }
 
-    // Step 6: Upload updated matches to Cloudinary
-    $timestamp = time();
-    $signature = sha1("invalidate=true&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
+    // Step 6: Output JSON or format as needed for application
+    header('Content-Type: application/json');
+    echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-    $curl = curl_init();
-    curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload",
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => array(
-            'file' => json_encode(array_values($filtered_matches)), // Upload the updated JSON directly
-            'upload_preset' => $upload_preset,
-            'timestamp' => $timestamp,
-            'api_key' => $cloudinary_api_key,
-            'signature' => $signature,
-            'invalidate' => 'true'
-        ),
-    ));
-
-    $response = curl_exec($curl);
-    curl_close($curl);
-
-    // Handle Cloudinary API response
-    if ($response) {
-        echo "Data uploaded to Cloudinary successfully!";
-    } else {
-        echo "Failed to upload data to Cloudinary.";
-    }
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
 }

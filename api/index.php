@@ -30,35 +30,34 @@ try {
     $upload_preset = "yeufjqiy";
 
     // Step 1: Load JSON from Cloudinary
-    $public_id = 'matches.json'; // Public ID of the file on Cloudinary
+    $matchesFile = 'matches.json'; // This won't be used if we're not saving locally
 
-    // Step 2: Fetch JSON data from Cloudinary
-    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$public_id;
+    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$matchesFile;
     $json_data = get_data($json_url);
 
     if (!$json_data) {
         die("Failed to fetch JSON data from Cloudinary.");
     }
 
-    // Step 3: Decode JSON data into an array of objects
+    // Step 2: Decode JSON data into an array of objects
     $matches = json_decode($json_data);
 
     if (!$matches) {
         die("Failed to decode JSON data from Cloudinary.");
     }
 
-    // Step 4: Remove matches older than yesterday
+    // Step 3: Remove matches older than yesterday
     $yesterday = strtotime('-1 day');
     $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
         $match_date = strtotime($match->match_date);
         return $match_date > $yesterday;
     });
 
-    // Step 5: Process each remaining match
+    // Step 4: Process each remaining match
     foreach ($filtered_matches as $match) {
         $match_url = $match->match_url;
         
-        // Step 6: Fetch HTML for each match_url
+        // Step 5: Fetch HTML for each match_url
         $html = get_data($match_url);
         
         if (!$html) {
@@ -95,35 +94,37 @@ try {
         $match->score2 = $score2;
     }
 
-    // Step 7: Upload updated matches to Cloudinary
+    // Step 6: Prepare data for Cloudinary upload
+    $data_to_upload = json_encode(array_values($filtered_matches));
+
+    // Step 7: Generate signature for Cloudinary upload
     $timestamp = time();
     $signature = sha1("invalidate=true&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
+    // Step 8: Perform cURL request to upload to Cloudinary
     $curl = curl_init();
     curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/raw/upload/{$public_id}",
+        CURLOPT_URL => "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload",
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CUSTOMREQUEST => 'PUT',
-        CURLOPT_POSTFIELDS => json_encode(array_values($filtered_matches)),
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json',
-            'Authorization: Basic ' . base64_encode("{$cloudinary_api_key}:{$cloudinary_api_secret}")
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => array(
+            'file' => $data_to_upload, // Upload the updated JSON directly
+            'upload_preset' => $upload_preset,
+            'timestamp' => $timestamp,
+            'api_key' => $cloudinary_api_key,
+            'signature' => $signature,
+            'invalidate' => 'true'
         ),
     ));
 
-    curl_setopt($curl, CURLOPT_HEADER, 1);
     $response = curl_exec($curl);
-    $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
     curl_close($curl);
 
-    // Handle Cloudinary API response
-    if ($httpcode === 200) {
+    // Step 9: Handle Cloudinary API response
+    if ($response) {
         echo "Data uploaded to Cloudinary successfully!";
-        // Output JSON response for verification or further processing
-        
-        echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     } else {
-        echo "Failed to upload data to Cloudinary. HTTP Error: " . $httpcode;
+        echo "Failed to upload data to Cloudinary.";
     }
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());

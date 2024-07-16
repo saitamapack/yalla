@@ -6,11 +6,11 @@ function get_data($url) {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)");
-
+    
     // Set proper SSL verification settings
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); // Verify the SSL host
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Verify SSL certificate
-
+    
     curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
@@ -30,7 +30,9 @@ try {
     $upload_preset = "yeufjqiy";
 
     // Step 1: Load JSON from Cloudinary
-    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/matches.json';
+    $matchesFile = 'matches.json'; // This won't be used if we're not saving locally
+
+    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$matchesFile;
     $json_data = get_data($json_url);
 
     if (!$json_data) {
@@ -54,45 +56,52 @@ try {
     // Step 4: Process each remaining match
     foreach ($filtered_matches as $match) {
         $match_url = $match->match_url;
-
+        
         // Step 5: Fetch HTML for each match_url
         $html = get_data($match_url);
-
+        
         if (!$html) {
             echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
             continue;
         }
-
+        
         // Use DOMDocument to parse HTML
         $dom = new DOMDocument();
         libxml_use_internal_errors(true); // Disable libxml errors
         $dom->loadHTML($html);
-
+        
         // Find the specific <div class="main-result">
         $xpath = new DOMXPath($dom);
         $divClass = 'main-result';
         $mainResultDiv = $xpath->query("//div[contains(@class, '$divClass')]")->item(0);
-
+        
         // Initialize scores
         $score1 = 0;
         $score2 = 0;
-
+        
         if ($mainResultDiv) {
             // Extract scores from <div class="main-result">
             $bElements = $xpath->query(".//b", $mainResultDiv);
-
+            
             if ($bElements->length >= 2) {
                 $score1 = (int) $bElements->item(0)->nodeValue;
                 $score2 = (int) $bElements->item(1)->nodeValue;
             }
         }
-
+        
         // Update scores in the match data
         $match->score1 = $score1;
         $match->score2 = $score2;
     }
 
-    // Step 6: Upload updated matches to Cloudinary
+    // Step 6: Save updated matches to vrc.json locally
+    $local_filename = 'vrc.json';
+    $json_encoded = json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    if (file_put_contents($local_filename, $json_encoded) === false) {
+        die("Failed to save JSON data locally.");
+    }
+
+    // Step 7: Upload vrc.json to Cloudinary
     $timestamp = time();
     $signature = sha1("file=vrc.json&invalidate=true&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
@@ -102,7 +111,7 @@ try {
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => array(
-            'file' => json_encode(array_values($filtered_matches)), // Upload the updated JSON directly
+            'file' => new CURLFile($local_filename), // Upload the local vrc.json file
             'upload_preset' => $upload_preset,
             'timestamp' => $timestamp,
             'api_key' => $cloudinary_api_key,
@@ -121,6 +130,7 @@ try {
     } else {
         echo "Failed to upload data to Cloudinary.";
     }
+
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
 }

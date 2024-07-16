@@ -100,30 +100,29 @@ try {
 
     $curl = curl_init();
     curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload",
+        CURLOPT_URL => "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/raw/upload/{$matchesFile}",
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => array(
-            'file' => json_encode(array_values($filtered_matches)), // Upload the updated JSON directly
-            'upload_preset' => $upload_preset,
-            'timestamp' => $timestamp,
-            'api_key' => $cloudinary_api_key,
-            'signature' => $signature,
-            'invalidate' => 'true'
+        CURLOPT_CUSTOMREQUEST => 'PUT',
+        CURLOPT_POSTFIELDS => json_encode(array_values($filtered_matches)),
+        CURLOPT_HTTPHEADER => array(
+            'Content-Type: application/json',
+            'X-Requested-With: XMLHttpRequest'
         ),
     ));
 
+    curl_setopt($curl, CURLOPT_HEADER, 1);
     $response = curl_exec($curl);
+    $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
     curl_close($curl);
 
     // Handle Cloudinary API response
-    if ($response) {
+    if ($httpcode === 200) {
         echo "Data uploaded to Cloudinary successfully!";
-        // Output JSON response for Vercel deployment
-        header('Content-Type: application/json');
+        // Output JSON response for verification or further processing
+        
         echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     } else {
-        echo "Failed to upload data to Cloudinary.";
+        echo "Failed to upload data to Cloudinary. HTTP Error: " . $httpcode;
     }
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());

@@ -8,8 +8,8 @@
     }
   },
   "routes": [
-    { "src": "/index.php", "dest": "/api/index.php" },
-    { "src": "/clean.php", "dest": "/api/clean.php" },
-    { "src": "/(.*)", "dest": "/api/index.php" }
+    { "src": "/", "dest": "/api/index.php" },
+    { "src": "/clean", "dest": "/api/clean.php" },
+    { "src": "/(.*)", "dest": "/api/$1.php" }
   ]
 }

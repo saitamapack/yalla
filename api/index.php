@@ -51,6 +51,47 @@ try {
         return $match_date > $yesterday;
     });
 
+    // Step 4: Process each remaining match
+    foreach ($filtered_matches as &$match) {
+        $match_url = $match->match_url;
+
+        // Step 5: Fetch HTML for each match_url
+        $html = get_data($match_url);
+
+        if (!$html) {
+            echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
+            continue;
+        }
+
+        // Use DOMDocument to parse HTML
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true); // Disable libxml errors
+        $dom->loadHTML($html);
+
+        // Find the specific <div class="main-result">
+        $xpath = new DOMXPath($dom);
+        $divClass = 'main-result';
+        $mainResultDiv = $xpath->query("//div[contains(@class, '$divClass')]")->item(0);
+
+        // Initialize scores
+        $score1 = 0;
+        $score2 = 0;
+
+        if ($mainResultDiv) {
+            // Extract scores from <div class="main-result">
+            $bElements = $xpath->query(".//b", $mainResultDiv);
+
+            if ($bElements->length >= 2) {
+                $score1 = (int) $bElements->item(0)->nodeValue;
+                $score2 = (int) $bElements->item(1)->nodeValue;
+            }
+        }
+
+        // Update scores in the match object
+        $match->score1 = $score1;
+        $match->score2 = $score2;
+    }
+
     // Step 6: Save updated matches to a temporary file
     $temp_file = tempnam(sys_get_temp_dir(), 'matches');
     file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
@@ -81,9 +122,9 @@ try {
 
     // Handle Cloudinary API response
     if ($response) {
-        echo "Filtered matches saved and uploaded to Cloudinary successfully!";
+        echo "Data saved and uploaded to Cloudinary successfully!";
     } else {
-        echo "Failed to upload filtered matches to Cloudinary.";
+        echo "Failed to upload matches to Cloudinary.";
     }
 
     // Clean up: Delete the temporary file

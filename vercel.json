@@ -2,10 +2,14 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.0"
+    },
+    "api/clean.php": {
+      "runtime": "vercel-php@0.7.0"
     }
   },
   "routes": [
-    { "src": "/(.+\\.php)", "dest": "/api/$1" },
+    { "src": "/index.php", "dest": "/api/index.php" },
+    { "src": "/clean.php", "dest": "/api/clean.php" },
     { "src": "/(.*)", "dest": "/api/index.php" }
   ]
 }

@@ -5,14 +5,12 @@
     },
     "api/clean.php": {
       "runtime": "vercel-php@0.7.0"
-    },
-    "api/:file([^.]+\\.php)": {
-      "runtime": "vercel-php@0.7.0"
     }
   },
   "routes": [
     { "src": "/", "dest": "/api/index.php" },
     { "src": "/clean", "dest": "/api/clean.php" },
-    { "src": "/:file([^/]+\\.php)", "dest": "/api/:file.php" }
+    { "src": "/:file([^/]+\\.php)", "dest": "/api/:file.php" },
+    { "src": "/(.*)", "dest": "/api/index.php" }
   ]
 }

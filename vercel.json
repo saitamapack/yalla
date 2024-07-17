@@ -3,6 +3,9 @@
     "api/index.php": {
       "runtime": "vercel-php@0.7.0"
     },
+    "api/clean.php": {
+      "runtime": "vercel-php@0.7.0"
+    },
     "api/(.*).php": {
       "runtime": "vercel-php@0.7.0"
     }
@@ -10,6 +13,7 @@
   "routes": [
     { "src": "/", "dest": "/api/index.php" },
     { "src": "/clean", "dest": "/api/clean.php" },
-    { "src": "/(.*)", "dest": "/api/$1.php" }
+    { "src": "/(.+)\\.php", "dest": "/api/$1.php" },
+    { "src": "/(.*)", "dest": "/api/index.php" }
   ]
 }

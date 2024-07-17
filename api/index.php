@@ -44,11 +44,18 @@ try {
         die("Failed to decode JSON data from Cloudinary.");
     }
 
-    // Step 6: Save matches to a temporary file
-    $temp_file = tempnam(sys_get_temp_dir(), 'matches');
-    file_put_contents($temp_file, $json_data);
+    // Step 3: Remove matches older than yesterday
+    $yesterday = strtotime('-1 day');
+    $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
+        $match_date = strtotime($match->match_date);
+        return $match_date > $yesterday;
+    });
 
-    // Step 7: Upload matches.json to Cloudinary
+    // Step 6: Save updated matches to a temporary file
+    $temp_file = tempnam(sys_get_temp_dir(), 'matches');
+    file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+    // Step 7: Upload updated matches.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
     $public_id = 'matches.json'; // Specify the public_id for the file name
@@ -74,9 +81,9 @@ try {
 
     // Handle Cloudinary API response
     if ($response) {
-        echo "Matches uploaded to Cloudinary successfully!";
+        echo "Filtered matches saved and uploaded to Cloudinary successfully!";
     } else {
-        echo "Failed to upload matches to Cloudinary.";
+        echo "Failed to upload filtered matches to Cloudinary.";
     }
 
     // Clean up: Delete the temporary file

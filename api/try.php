@@ -2,7 +2,7 @@
 // Function to fetch data from a URL using cURL
 function get_data($url, $headers = []) {
     $ch = curl_init();
-    $timeout = 5; // Timeout in seconds
+    $timeout = 60; // Timeout in seconds
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)");
@@ -44,11 +44,59 @@ try {
         die("Failed to decode JSON data from Cloudinary.");
     }
 
-    // Step 6: Save matches to a temporary file
-    $temp_file = tempnam(sys_get_temp_dir(), 'matches');
-    file_put_contents($temp_file, $json_data);
+    // Step 3: Remove matches older than yesterday
+    $yesterday = strtotime('-1 day');
+    $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
+        $match_date = strtotime($match->match_date);
+        return $match_date > $yesterday;
+    });
 
-    // Step 7: Upload matches.json to Cloudinary
+    // Step 4: Process each remaining match
+    foreach ($filtered_matches as &$match) {
+        $match_url = $match->match_url;
+
+        // Step 5: Fetch HTML for each match_url
+        $html = get_data($match_url);
+
+        if (!$html) {
+            echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
+            continue;
+        }
+
+        // Use DOMDocument to parse HTML
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true); // Disable libxml errors
+        $dom->loadHTML($html);
+
+        // Find the specific <div class="main-result">
+        $xpath = new DOMXPath($dom);
+        $divClass = 'main-result';
+        $mainResultDiv = $xpath->query("//div[contains(@class, '$divClass')]")->item(0);
+
+        // Initialize scores
+        $score1 = 0;
+        $score2 = 0;
+
+        if ($mainResultDiv) {
+            // Extract scores from <div class="main-result">
+            $bElements = $xpath->query(".//b", $mainResultDiv);
+
+            if ($bElements->length >= 2) {
+                $score1 = (int) $bElements->item(0)->nodeValue;
+                $score2 = (int) $bElements->item(1)->nodeValue;
+            }
+        }
+
+        // Update scores in the match object
+        $match->score1 = $score1;
+        $match->score2 = $score2;
+    }
+
+    // Step 6: Save updated matches to a temporary file
+    $temp_file = tempnam(sys_get_temp_dir(), 'matches');
+    file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+    // Step 7: Upload updated matches.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
     $public_id = 'matches.json'; // Specify the public_id for the file name
@@ -74,7 +122,7 @@ try {
 
     // Handle Cloudinary API response
     if ($response) {
-        echo "Matches uploaded to Cloudinary successfully!";
+        echo "Data saved and uploaded to Cloudinary successfully!";
     } else {
         echo "Failed to upload matches to Cloudinary.";
     }

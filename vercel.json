@@ -1,10 +1,12 @@
 {
   "functions": {
     "api/index.php": {
-      "runtime": "vercel-php@0.7.0"
+      "runtime": "vercel-php@0.7.0",
+      "maxDuration": 60
     },
     "api/clean.php": {
-      "runtime": "vercel-php@0.7.0"
+      "runtime": "vercel-php@0.7.0",
+      "maxDuration": 60
     }
   },
   "routes": [

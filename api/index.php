@@ -1,4 +1,4 @@
-<?php
+<?php 
 // Function to fetch data from a URL using cURL
 function get_data($url, $headers = []) {
     $ch = curl_init();

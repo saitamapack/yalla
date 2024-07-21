@@ -2,22 +2,19 @@
 // Function to fetch data from a URL using cURL
 function get_data($url, $headers = []) {
     $ch = curl_init();
-    $timeout = 30; // Timeout in seconds
+    $timeout = 60; // Timeout in seconds
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)");
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
     if (!empty($headers)) {
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     }
     $data = curl_exec($ch);
-    if (curl_errno($ch)) {
-        echo "cURL Error: " . curl_error($ch) . "<br>";
-    }
     curl_close($ch);
     return $data;
 }
@@ -47,82 +44,62 @@ try {
         die("Failed to decode JSON data from Cloudinary.");
     }
 
-    // Step 3: Process each match
-    $multi_curl = [];
-    $mh = curl_multi_init();
+    // Step 3: Remove matches older than yesterday
+    $yesterday = strtotime('-1 day');
+    $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
+        $match_date = strtotime($match->match_date);
+        return $match_date > $yesterday;
+    });
 
-    foreach ($matches as &$match) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $match->match_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
-        curl_multi_add_handle($mh, $ch);
-        $multi_curl[$match->match_url] = ['ch' => $ch, 'index' => array_search($match, $matches)];
-    }
+    // Step 4: Process each remaining match
+    foreach ($filtered_matches as &$match) {
+        $match_url = $match->match_url;
 
-    $running = null;
-    do {
-        curl_multi_exec($mh, $running);
-        curl_multi_select($mh);
-    } while ($running > 0);
+        // Step 5: Fetch HTML for each match_url
+        $html = get_data($match_url);
 
-    foreach ($multi_curl as $match_url => $data) {
-        $html = curl_multi_getcontent($data['ch']);
-        curl_multi_remove_handle($mh, $data['ch']);
-
-        if ($html) {
-            // Use DOMDocument to parse HTML
-            $dom = new DOMDocument();
-            libxml_use_internal_errors(true); // Disable libxml errors
-            $dom->loadHTML($html);
-
-            // Find the specific <div class="main-result">
-            $xpath = new DOMXPath($dom);
-            $divClass = 'main-result';
-            $mainResultDiv = $xpath->query("//div[contains(@class, '$divClass')]")->item(0);
-
-            // Initialize scores
-            $score1 = 0;
-            $score2 = 0;
-
-            if ($mainResultDiv) {
-                // Extract scores from <div class="main-result">
-                $bElements = $xpath->query(".//b", $mainResultDiv);
-
-                if ($bElements->length >= 2) {
-                    $score1 = (int) $bElements->item(0)->nodeValue;
-                    $score2 = (int) $bElements->item(1)->nodeValue;
-                } else {
-                    echo "Score elements not found in HTML for URL: " . $match_url . "<br>";
-                }
-            } else {
-                echo "main-result div not found in HTML for URL: " . $match_url . "<br>";
-            }
-
-            // Update scores in the match object
-            $index = $data['index'];
-            $matches[$index]->score1 = $score1;
-            $matches[$index]->score2 = $score2;
-
-            // Debugging output
-            echo "Updated match at index {$index}: URL {$match_url}, Score1: {$score1}, Score2: {$score2}<br>";
-        } else {
+        if (!$html) {
             echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
+            continue;
         }
+
+        // Use DOMDocument to parse HTML
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true); // Disable libxml errors
+        $dom->loadHTML($html);
+
+        // Find the specific <div class="main-result">
+        $xpath = new DOMXPath($dom);
+        $divClass = 'main-result';
+        $mainResultDiv = $xpath->query("//div[contains(@class, '$divClass')]")->item(0);
+
+        // Initialize scores
+        $score1 = 0;
+        $score2 = 0;
+
+        if ($mainResultDiv) {
+            // Extract scores from <div class="main-result">
+            $bElements = $xpath->query(".//b", $mainResultDiv);
+
+            if ($bElements->length >= 2) {
+                $score1 = (int) $bElements->item(0)->nodeValue;
+                $score2 = (int) $bElements->item(1)->nodeValue;
+            }
+        }
+
+        // Update scores in the match object
+        $match->score1 = $score1;
+        $match->score2 = $score2;
     }
-    curl_multi_close($mh);
 
-    // Step 4: Save updated matches to a temporary file
+    // Step 6: Save updated matches to a temporary file
     $temp_file = tempnam(sys_get_temp_dir(), 'matches');
-    file_put_contents($temp_file, json_encode(array_values($matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-    // Step 5: Upload updated matches2.json to Cloudinary
+    // Step 7: Upload updated matches.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
-    $public_id = 'matches3.json'; // Updated public_id
+    $public_id = 'matches3.json'; // Specify the public_id for the file name
     $signature = sha1("invalidate=true&public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();
@@ -137,13 +114,10 @@ try {
             'api_key' => $cloudinary_api_key,
             'signature' => $signature,
             'invalidate' => 'true',
-            'public_id' => $public_id // Include updated public_id in the POST fields
+            'public_id' => $public_id // Include public_id in the POST fields
         ),
     ));
     $response = curl_exec($curl);
-    if (curl_errno($curl)) {
-        echo "cURL Error: " . curl_error($curl) . "<br>";
-    }
     curl_close($curl);
 
     // Handle Cloudinary API response

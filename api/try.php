@@ -139,9 +139,9 @@ try {
 
     // Handle Cloudinary API response
     if ($response) {
-        echo "Data saved and uploaded to Cloudinary successfully!";
+        echo "Data try saved and uploaded to Cloudinary successfully!";
     } else {
-        echo "Failed to upload matches to Cloudinary.";
+        echo "Failed try to upload matches to Cloudinary.";
     }
 
     // Clean up: Delete the temporary file

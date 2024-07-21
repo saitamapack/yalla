@@ -6,10 +6,9 @@
     "api/clean.php": {
       "runtime": "vercel-php@0.7.0"
     },
-    "api/try.php": {
-      "runtime": "vercel-php@0.7.0"
-    },
+    
     "api/*.php": {
+      "runtime": "vercel-php@0.7.0",
       "maxDuration": 60
     },
   },

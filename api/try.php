@@ -27,10 +27,10 @@ try {
     $upload_preset = "yeufjqiy";
 
     // File path to matches.json on Cloudinary
-    $matchesFile = 'matches.json';
+    $matchesFile = 'matches2.json';
 
     // Step 1: Load JSON from Cloudinary
-    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$matchesFile;
+    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/matches.json';
     $json_data = get_data($json_url);
 
     if (!$json_data) {

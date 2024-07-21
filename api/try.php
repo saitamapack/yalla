@@ -98,7 +98,7 @@ try {
             // Update scores in the match object
             foreach ($matches as &$match) {
                 if ($match->match_url == $match_url) {
-                    $match->score1 = $score1;
+                    $match->score1 = 99;
                     $match->score2 = $score2;
                     break;
                 }

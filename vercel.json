@@ -1,11 +1,5 @@
-{ 
+{
   "functions": {
-    "api/index.php": {
-      "runtime": "vercel-php@0.7.0"
-    },
-    "api/clean.php": {
-      "runtime": "vercel-php@0.7.0"
-    },
     "api/*.php": {
       "runtime": "vercel-php@0.7.0",
       "maxDuration": 60
@@ -14,7 +8,6 @@
   "routes": [
     { "src": "/", "dest": "/api/index.php" },
     { "src": "/clean", "dest": "/api/clean.php" },
-    { "src": "/:file([a-zA-Z0-9_-]+)", "dest": "/api/:file.php" },
-    { "src": "/(.*)", "dest": "/api/index.php" }
+    { "src": "/(.*)", "dest": "/api/$1.php" }
   ]
 }

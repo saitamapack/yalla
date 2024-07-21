@@ -10,7 +10,7 @@
       "runtime": "vercel-php@0.7.0"
     },
     "api/*.php": {
-      "maxDuration": 60 // This function can run for a maximum of 15 seconds
+      "maxDuration": 60
     },
   },
   "routes": [

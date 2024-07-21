@@ -112,7 +112,7 @@ try {
     // Step 5: Upload updated matches2.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
-    $public_id = 'matches2.json'; // Updated public_id
+    $public_id = 'matches.json'; // Updated public_id
     $signature = sha1("invalidate=true&public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();

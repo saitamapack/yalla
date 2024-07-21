@@ -27,10 +27,10 @@ try {
     $upload_preset = "yeufjqiy";
 
     // File path to matches.json on Cloudinary
-    $matchesFile = 'matches2.json';
+    $matchesFile = 'matches.json';
 
     // Step 1: Load JSON from Cloudinary
-    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/matches.json';
+    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$matchesFile;
     $json_data = get_data($json_url);
 
     if (!$json_data) {
@@ -57,7 +57,7 @@ try {
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
         curl_multi_add_handle($mh, $ch);
-        $multi_curl[$match->match_url] = $ch;
+        $multi_curl[$match->match_url] = ['ch' => $ch, 'index' => array_search($match, $matches)];
     }
 
     $running = null;
@@ -66,9 +66,9 @@ try {
         curl_multi_select($mh);
     } while ($running > 0);
 
-    foreach ($multi_curl as $match_url => $ch) {
-        $html = curl_multi_getcontent($ch);
-        curl_multi_remove_handle($mh, $ch);
+    foreach ($multi_curl as $match_url => $data) {
+        $html = curl_multi_getcontent($data['ch']);
+        curl_multi_remove_handle($mh, $data['ch']);
 
         if ($html) {
             // Use DOMDocument to parse HTML
@@ -96,13 +96,9 @@ try {
             }
 
             // Update scores in the match object
-            foreach ($matches as &$match) {
-                if ($match->match_url == $match_url) {
-                    $match->score1 = $score1;
-                    $match->score2 = $score2;
-                    break;
-                }
-            }
+            $index = $data['index'];
+            $matches[$index]->score1 = $score1;
+            $matches[$index]->score2 = $score2;
         } else {
             echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
         }
@@ -113,10 +109,10 @@ try {
     $temp_file = tempnam(sys_get_temp_dir(), 'matches');
     file_put_contents($temp_file, json_encode(array_values($matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-    // Step 5: Upload updated matches.json to Cloudinary
+    // Step 5: Upload updated matches2.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
-    $public_id = 'matches2.json'; // Specify the public_id for the file name
+    $public_id = 'matches2.json'; // Updated public_id
     $signature = sha1("invalidate=true&public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();
@@ -131,7 +127,7 @@ try {
             'api_key' => $cloudinary_api_key,
             'signature' => $signature,
             'invalidate' => 'true',
-            'public_id' => $public_id // Include public_id in the POST fields
+            'public_id' => $public_id // Include updated public_id in the POST fields
         ),
     ));
     $response = curl_exec($curl);
@@ -139,9 +135,9 @@ try {
 
     // Handle Cloudinary API response
     if ($response) {
-        echo "Data try saved and uploaded to Cloudinary successfully!";
+        echo "Data saved and uploaded to Cloudinary successfully!";
     } else {
-        echo "Failed try to upload matches to Cloudinary.";
+        echo "Failed to upload matches to Cloudinary.";
     }
 
     // Clean up: Delete the temporary file

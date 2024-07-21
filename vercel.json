@@ -14,7 +14,7 @@
   "routes": [
     { "src": "/", "dest": "/api/index.php" },
     { "src": "/clean", "dest": "/api/clean.php" },
-    { "src": "/:file([^/]+)", "dest": "/api/:file.php" },
+    { "src": "/:file([a-zA-Z0-9_-]+)", "dest": "/api/:file.php" },
     { "src": "/(.*)", "dest": "/api/index.php" }
   ]
 }

@@ -15,6 +15,9 @@ function get_data($url, $headers = []) {
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     }
     $data = curl_exec($ch);
+    if (curl_errno($ch)) {
+        echo "cURL Error: " . curl_error($ch) . "<br>";
+    }
     curl_close($ch);
     return $data;
 }
@@ -92,13 +95,20 @@ try {
                 if ($bElements->length >= 2) {
                     $score1 = (int) $bElements->item(0)->nodeValue;
                     $score2 = (int) $bElements->item(1)->nodeValue;
+                } else {
+                    echo "Score elements not found in HTML for URL: " . $match_url . "<br>";
                 }
+            } else {
+                echo "main-result div not found in HTML for URL: " . $match_url . "<br>";
             }
 
             // Update scores in the match object
             $index = $data['index'];
             $matches[$index]->score1 = $score1;
             $matches[$index]->score2 = $score2;
+
+            // Debugging output
+            echo "Updated match at index {$index}: URL {$match_url}, Score1: {$score1}, Score2: {$score2}<br>";
         } else {
             echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
         }
@@ -131,6 +141,9 @@ try {
         ),
     ));
     $response = curl_exec($curl);
+    if (curl_errno($curl)) {
+        echo "cURL Error: " . curl_error($curl) . "<br>";
+    }
     curl_close($curl);
 
     // Handle Cloudinary API response

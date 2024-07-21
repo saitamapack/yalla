@@ -1,17 +1,19 @@
 {
   "functions": {
     "api/index.php": {
-      "runtime": "vercel-php@0.7.0",
-      "maxDuration": 60
+      "runtime": "vercel-php@0.7.0"
     },
     "api/clean.php": {
-      "runtime": "vercel-php@0.7.0",
-      "maxDuration": 60
+      "runtime": "vercel-php@0.7.0"
+    },
+    "api/try.php": {
+      "runtime": "vercel-php@0.7.0"
     }
   },
   "routes": [
     { "src": "/", "dest": "/api/index.php" },
     { "src": "/clean", "dest": "/api/clean.php" },
+    { "src": "/try", "dest": "/api/try.php" },
     { "src": "/:file([^/]+\\.php)", "dest": "/api/:file.php" },
     { "src": "/(.*)", "dest": "/api/index.php" }
   ]

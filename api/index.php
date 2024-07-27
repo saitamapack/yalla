@@ -27,7 +27,7 @@ try {
     $upload_preset = "yeufjqiy";
 
     // File path to matches.json on Cloudinary
-    $matchesFile = 'matches.json';
+    $matchesFile = 'all.txt';
 
     // Step 1: Load JSON from Cloudinary
     $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$matchesFile;

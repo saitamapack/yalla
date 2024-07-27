@@ -21,7 +21,7 @@ function get_data($url, $headers = []) {
 
 try {
     // Cloudinary credentials
-    $cloudinary_cloud_name = "ds8s4fn5p";
+    $cloudinary_cloud_name = "issds8s4fn5p";
     $cloudinary_api_key = "731143319737329";
     $cloudinary_api_secret = "HD479cTPf2KY6iI7LEuJzrvNTpM";
     $upload_preset = "yeufjqiy";

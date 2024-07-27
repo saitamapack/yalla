@@ -117,7 +117,7 @@ try {
             'timestamp' => $timestamp,
             'api_key' => $cloudinary_api_key,
             'signature' => $signature,
-            'invalidate' => 'true',
+            
             'public_id' => $public_id // Include public_id in the POST fields
         ),
     ));

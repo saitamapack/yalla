@@ -96,7 +96,11 @@ try {
     $temp_file = tempnam(sys_get_temp_dir(), 'all');
     file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-    // Step 7: Upload updated all.txt to Cloudinary
+    // Step 7: Display the updated JSON data
+    echo "<h2>Updated Matches JSON:</h2>";
+    echo "<pre>" . htmlspecialchars(json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . "</pre>";
+
+    // Step 8: Upload updated all.txt to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
     $public_id = 'all.txt'; // Specify the public_id for the file name
@@ -120,12 +124,9 @@ try {
     $response = curl_exec($curl);
     curl_close($curl);
 
-    // Handle Cloudinary API response
-    if ($response) {
-        echo "Data saved and uploaded to Cloudinary successfully!";
-    } else {
-        echo "Failed to upload data to Cloudinary.";
-    }
+    // Display the Cloudinary API response
+    echo "<h2>Cloudinary API Response:</h2>";
+    echo "<pre>" . htmlspecialchars($response) . "</pre>";
 
     // Clean up: Delete the temporary file
     unlink($temp_file);

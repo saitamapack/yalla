@@ -26,22 +26,22 @@ try {
     $cloudinary_api_secret = "HD479cTPf2KY6iI7LEuJzrvNTpM";
     $upload_preset = "yeufjqiy";
 
-    // File path to matches.json on Cloudinary
-    $matchesFile = 'all.txt';
+    // File path to all.txt on Cloudinary
+    $file_path = 'all.txt';
 
-    // Step 1: Load JSON from Cloudinary
-    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$matchesFile;
-    $json_data = get_data($json_url);
+    // Step 1: Load text data from Cloudinary
+    $txt_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$file_path;
+    $txt_data = get_data($txt_url);
 
-    if (!$json_data) {
-        die("Failed to fetch JSON data from Cloudinary.");
+    if (!$txt_data) {
+        die("Failed to fetch data from Cloudinary.");
     }
 
-    // Step 2: Decode JSON data into an array of objects
-    $matches = json_decode($json_data);
+    // Step 2: Assume txt_data is JSON; decode it into an array of objects
+    $matches = json_decode($txt_data);
 
     if (!$matches) {
-        die("Failed to decode JSON data from Cloudinary.");
+        die("Failed to decode data from Cloudinary.");
     }
 
     // Step 3: Remove matches older than yesterday
@@ -96,7 +96,7 @@ try {
     $temp_file = tempnam(sys_get_temp_dir(), 'all');
     file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-    // Step 7: Upload updated matches.json to Cloudinary
+    // Step 7: Upload updated all.txt to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
     $public_id = 'all.txt'; // Specify the public_id for the file name
@@ -124,7 +124,7 @@ try {
     if ($response) {
         echo "Data saved and uploaded to Cloudinary successfully!";
     } else {
-        echo "Failed to upload matches to Cloudinary.";
+        echo "Failed to upload data to Cloudinary.";
     }
 
     // Clean up: Delete the temporary file

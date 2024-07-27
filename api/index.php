@@ -93,7 +93,7 @@ try {
     }
 
     // Step 6: Save updated matches to a temporary file
-    $temp_file = tempnam(sys_get_temp_dir(), 'matches');
+    $temp_file = tempnam(sys_get_temp_dir(), 'all');
     file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
     // Step 7: Upload updated matches.json to Cloudinary

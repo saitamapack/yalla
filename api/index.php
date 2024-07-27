@@ -100,7 +100,7 @@ try {
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
     $public_id = 'matches.json'; // Specify the public_id for the file name
-    $signature = sha1("invalidate=true&public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
+    $signature = sha1("public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();
     curl_setopt_array($curl, array(

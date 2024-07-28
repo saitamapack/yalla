@@ -21,16 +21,17 @@ function get_data($url, $headers = []) {
 
 try {
     // Cloudinary credentials
-    $cloudinary_cloud_name = "issds8s4fn5p";
-    $cloudinary_api_key = "731143319737329";
-    $cloudinary_api_secret = "HD479cTPf2KY6iI7LEuJzrvNTpM";
-    $upload_preset = "yeufjqiy";
+    $cloudinary_cloud_name = "dqzelggjc";
+    $cloudinary_api_key = "128433947257472";
+    $cloudinary_api_secret = "hmoYrAusm9CfLjv1uX69kfE-dbI";
+    $upload_preset = "ml_default";
 
     // File path to all.txt on Cloudinary
-    $file_path = 'all.txt';
+    $file_path = 'matches.json';
 
     // Step 1: Load text data from Cloudinary
-    $txt_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$file_path;
+    $version = rand(100000, 999999); // Generate a random version number
+$txt_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/upload/v' . $version . '/' . $file_path;
     $txt_data = get_data($txt_url);
 
     if (!$txt_data) {
@@ -103,7 +104,7 @@ try {
     // Step 8: Upload updated all.txt to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
-    $public_id = 'all.txt'; // Specify the public_id for the file name
+    $public_id = 'matches.json'; // Specify the public_id for the file name
     $signature = sha1("public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();

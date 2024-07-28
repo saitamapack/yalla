@@ -21,16 +21,17 @@ function get_data($url, $headers = []) {
 
 try {
     // Cloudinary credentials
-    $cloudinary_cloud_name = "ds8s4fn5p";
-    $cloudinary_api_key = "731143319737329";
-    $cloudinary_api_secret = "HD479cTPf2KY6iI7LEuJzrvNTpM";
-    $upload_preset = "yeufjqiy";
+    $cloudinary_cloud_name = "dqzelggjc";
+    $cloudinary_api_key = "128433947257472";
+    $cloudinary_api_secret = "hmoYrAusm9CfLjv1uX69kfE-dbI";
+    $upload_preset = "ml_default";
 
     // File path to matches.json on Cloudinary
     $matchesFile = 'matches.json';
 
     // Step 1: Load JSON from Cloudinary
-    $json_url = 'https://res.cloudinary.com/'.$cloudinary_cloud_name.'/raw/upload/'.$matchesFile;
+    $version = rand(100000, 999999); // Generate a random version number
+$txt_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/upload/v' . $version . '/' . $file_path;
     $json_data = get_data($json_url);
 
     if (!$json_data) {

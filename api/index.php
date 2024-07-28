@@ -31,7 +31,7 @@ try {
 
     // Step 1: Load JSON from Cloudinary
     $version = rand(100000, 999999); // Generate a random version number
-$json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/upload/v' . $version . '/' . $file_path;
+$json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/upload/v' . $version . '/' . $matchesFile;
     $json_data = get_data($json_url);
 
     if (!$json_data) {

@@ -121,6 +121,8 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     $response = curl_exec($curl);
     curl_close($curl);
 
+    echo $json_url;
+    
     // Handle Cloudinary API response
     if ($response) {
         echo "Data try saved and uploaded to Cloudinary successfully!";

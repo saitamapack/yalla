@@ -121,7 +121,8 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     $response = curl_exec($curl);
     curl_close($curl);
 
-    echo $json_url;
+    echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
     
     // Handle Cloudinary API response
     if ($response) {

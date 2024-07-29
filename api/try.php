@@ -104,12 +104,7 @@ echo $json_url;
     echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
     
-    // Handle Cloudinary API response
-    if ($response) {
-        echo "Data try saved and uploaded to Cloudinary successfully!";
-    } else {
-        echo "Failed to upload matches to Cloudinary.";
-    }
+    
 
     // Clean up: Delete the temporary file
     unlink($temp_file);

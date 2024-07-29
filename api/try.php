@@ -100,7 +100,7 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     
     $curl = curl_init();
     
-
+echo $json_url;
     echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
     

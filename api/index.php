@@ -32,7 +32,7 @@ try {
 
     // Step 1: Load JSON from Cloudinary
     $version = rand(1, 999999); // Generate a random version number
-$json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/upload/v' . $version . '/' . $matchesFile;
+$json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/upload/' . $matchesFile;
     $json_data = get_data($json_url);
 
     if (!$json_data) {
@@ -47,7 +47,7 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     }
 
     // Step 3: Remove matches older than yesterday
-    $yesterday = strtotime('-3 days');
+    $yesterday = strtotime('-1 day');
     $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
         $match_date = strtotime($match->match_date);
         return $match_date > $yesterday;
@@ -95,7 +95,7 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     }
 
     // Step 6: Save updated matches to a temporary file
-    $temp_file = tempnam(sys_get_temp_dir(), 'results');
+    $temp_file = tempnam(sys_get_temp_dir(), 'matches');
     file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
     // Step 7: Upload updated matches.json to Cloudinary

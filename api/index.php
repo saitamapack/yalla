@@ -101,7 +101,7 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     // Step 7: Upload updated matches.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
-    $public_id = 'results.json'; // Specify the public_id for the file name
+    $public_id = 'matches.json'; // Specify the public_id for the file name
     $signature = sha1("invalidate=true&public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();

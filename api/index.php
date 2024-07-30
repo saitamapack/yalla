@@ -28,11 +28,9 @@ try {
 
     // File path to matches.json on Cloudinary
     $matchesFile = 'matches.json';
-    $results = 'results.json';
 
     // Step 1: Load JSON from Cloudinary
-    $version = rand(1, 999999); // Generate a random version number
-$json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/upload/' . $matchesFile;
+    $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/upload/' . $matchesFile;
     $json_data = get_data($json_url);
 
     if (!$json_data) {
@@ -122,18 +120,18 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     $response = curl_exec($curl);
     curl_close($curl);
 
-    echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-
-    
     // Handle Cloudinary API response
     if ($response) {
-        echo "Data try saved and uploaded to Cloudinary successfully!";
+        echo "Data successfully saved and uploaded to Cloudinary!";
     } else {
         echo "Failed to upload matches to Cloudinary.";
     }
 
     // Clean up: Delete the temporary file
     unlink($temp_file);
+
+    // Show JSON result
+    echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());

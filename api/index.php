@@ -45,7 +45,7 @@ try {
     }
 
     // Step 3: Remove matches older than yesterday
-    $yesterday = strtotime('-1 day');
+    $yesterday = strtotime('-2 days');
     $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
         $match_date = strtotime($match->match_date);
         return $match_date > $yesterday;

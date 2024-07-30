@@ -47,7 +47,7 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     }
 
     // Step 3: Remove matches older than yesterday
-    $yesterday = strtotime('-3 day');
+    $yesterday = strtotime('-3 days');
     $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
         $match_date = strtotime($match->match_date);
         return $match_date > $yesterday;

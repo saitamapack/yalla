@@ -27,7 +27,8 @@ try {
     $upload_preset = "ml_default";
 
     // File path to matches.json on Cloudinary
-    $matchesFile = 'results.json';
+    $matchesFile = 'matches.json';
+    $results = 'results.json';
 
     // Step 1: Load JSON from Cloudinary
     $version = rand(1, 999999); // Generate a random version number
@@ -94,13 +95,13 @@ $json_url = 'https://res.cloudinary.com/' . $cloudinary_cloud_name . '/raw/uploa
     }
 
     // Step 6: Save updated matches to a temporary file
-    $temp_file = tempnam(sys_get_temp_dir(), 'matches');
+    $temp_file = tempnam(sys_get_temp_dir(), 'results');
     file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
     // Step 7: Upload updated matches.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
     $timestamp = time();
-    $public_id = 'matches.json'; // Specify the public_id for the file name
+    $public_id = 'results.json'; // Specify the public_id for the file name
     $signature = sha1("invalidate=true&public_id={$public_id}&timestamp={$timestamp}&upload_preset={$upload_preset}{$cloudinary_api_secret}");
 
     $curl = curl_init();

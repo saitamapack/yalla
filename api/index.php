@@ -27,7 +27,7 @@ try {
     $upload_preset = "ml_default";
 
     // File path to matches.json on Cloudinary
-    $matchesFile = 'matches.json';
+    $matchesFile = 'results.json';
 
     // Step 1: Load JSON from Cloudinary
     $version = rand(1, 999999); // Generate a random version number

@@ -44,7 +44,8 @@ try {
         die("Failed to decode JSON data from Cloudinary.");
     }
 
-    // Step 3: Identify today's date
+    // Step 3: Identify the date range for today and yesterday
+    $yesterday = strtotime('yesterday');
     $today = strtotime('today');
     $tomorrow = strtotime('tomorrow');
 
@@ -52,8 +53,8 @@ try {
     foreach ($matches as &$match) {
         $match_date = strtotime($match->match_date);
 
-        // Only update the scores for matches that are happening today
-        if ($match_date >= $today && $match_date < $tomorrow) {
+        // Only update the scores for matches that are happening today or yesterday
+        if ($match_date >= $yesterday && $match_date < $tomorrow) {
             $match_url = $match->match_url;
 
             // Step 5: Fetch HTML for each match_url

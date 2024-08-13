@@ -44,57 +44,59 @@ try {
         die("Failed to decode JSON data from Cloudinary.");
     }
 
-    // Step 3: Remove matches older than yesterday
-    $yesterday = strtotime('-2 days');
-    $filtered_matches = array_filter($matches, function($match) use ($yesterday) {
+    // Step 3: Identify today's date
+    $today = strtotime('today');
+    $tomorrow = strtotime('tomorrow');
+
+    // Step 4: Process each match
+    foreach ($matches as &$match) {
         $match_date = strtotime($match->match_date);
-        return $match_date > $yesterday;
-    });
 
-    // Step 4: Process each remaining match
-    foreach ($filtered_matches as &$match) {
-        $match_url = $match->match_url;
+        // Only update the scores for matches that are happening today
+        if ($match_date >= $today && $match_date < $tomorrow) {
+            $match_url = $match->match_url;
 
-        // Step 5: Fetch HTML for each match_url
-        $html = get_data($match_url);
+            // Step 5: Fetch HTML for each match_url
+            $html = get_data($match_url);
 
-        if (!$html) {
-            echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
-            continue;
-        }
-
-        // Use DOMDocument to parse HTML
-        $dom = new DOMDocument();
-        libxml_use_internal_errors(true); // Disable libxml errors
-        $dom->loadHTML($html);
-
-        // Find the specific <div class="main-result">
-        $xpath = new DOMXPath($dom);
-        $divClass = 'main-result';
-        $mainResultDiv = $xpath->query("//div[contains(@class, '$divClass')]")->item(0);
-
-        // Initialize scores
-        $score1 = 0;
-        $score2 = 0;
-
-        if ($mainResultDiv) {
-            // Extract scores from <div class="main-result">
-            $bElements = $xpath->query(".//b", $mainResultDiv);
-
-            if ($bElements->length >= 2) {
-                $score1 = (int) $bElements->item(0)->nodeValue;
-                $score2 = (int) $bElements->item(1)->nodeValue;
+            if (!$html) {
+                echo "Failed to fetch HTML content for match: " . $match_url . "<br>";
+                continue;
             }
-        }
 
-        // Update scores in the match object
-        $match->score1 = $score1;
-        $match->score2 = $score2;
+            // Use DOMDocument to parse HTML
+            $dom = new DOMDocument();
+            libxml_use_internal_errors(true); // Disable libxml errors
+            $dom->loadHTML($html);
+
+            // Find the specific <div class="main-result">
+            $xpath = new DOMXPath($dom);
+            $divClass = 'main-result';
+            $mainResultDiv = $xpath->query("//div[contains(@class, '$divClass')]")->item(0);
+
+            // Initialize scores
+            $score1 = 0;
+            $score2 = 0;
+
+            if ($mainResultDiv) {
+                // Extract scores from <div class="main-result">
+                $bElements = $xpath->query(".//b", $mainResultDiv);
+
+                if ($bElements->length >= 2) {
+                    $score1 = (int) $bElements->item(0)->nodeValue;
+                    $score2 = (int) $bElements->item(1)->nodeValue;
+                }
+            }
+
+            // Update scores in the match object
+            $match->score1 = $score1;
+            $match->score2 = $score2;
+        }
     }
 
     // Step 6: Save updated matches to a temporary file
     $temp_file = tempnam(sys_get_temp_dir(), 'matches');
-    file_put_contents($temp_file, json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    file_put_contents($temp_file, json_encode(array_values($matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
     // Step 7: Upload updated matches.json to Cloudinary
     $cloudinary_url = "https://api.cloudinary.com/v1_1/{$cloudinary_cloud_name}/auto/upload";
@@ -131,7 +133,7 @@ try {
     unlink($temp_file);
 
     // Show JSON result
-    echo json_encode(array_values($filtered_matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    echo json_encode(array_values($matches), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
